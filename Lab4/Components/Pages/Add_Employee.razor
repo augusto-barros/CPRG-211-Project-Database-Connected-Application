@@ -1,0 +1,171 @@
+﻿@page "/Add_Employee"
+
+<div class="add-employee-page">
+    <h1>Employee Management</h1>
+
+    <!-- Add employee form -->
+
+    <div class="add-employee-form">
+        <h2>Add New Employee</h2>
+        <form @onsubmit="AddEmployee">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" @bind="newEmployee.Name" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" @bind="newEmployee.Email" />
+            </div>
+
+            <div class="form-group">
+                <label for="department">Department:</label>
+                <input type="text" id="department" @bind="newEmployee.Department" />
+            </div>
+
+            <div class="form-group">
+                <label for="position">Position:</label>
+                <input type="text" id="position" @bind="newEmployee.Position" />
+            </div>
+
+            <button type="submit">Add Employee</button>
+        </form>
+    </div>
+
+    <!-- Employee list -->
+    <div class="employee-list">
+        <h2>Employee List</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var employee in Employees)
+                {
+                    <tr>
+                        <td>@employee.Id</td>
+                        <td>@employee.Name</td>
+                        <td>@employee.Email</td>
+                        <td>@employee.Department</td>
+                        <td>@employee.Position</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+
+    List<Employee> FilteredEmployees = new List<Employee>();
+    string searchKeyword = "";
+
+
+    List<Employee> Employees = new List<Employee>
+    {
+        new Employee { Id = 1, Name = "John Doe", Email = "john.doe@example.com", Department = "IT", Position = "Software Developer" },
+        new Employee { Id = 2, Name = "Jane Smith", Email = "jane.smith@example.com", Department = "HR", Position = "HR Manager" },
+        new Employee { Id = 3, Name = "David Johnson", Email = "david.johnson@example.com", Department = "Finance", Position = "Accountant" }
+    };
+
+    // New employee model
+    Employee newEmployee = new Employee();
+
+    // Method to add a new employee
+    void AddEmployee()
+    {
+        // Generate ID 
+        newEmployee.Id = Employees.Count + 1;
+
+        // Add the new employee to the list
+        Employees.Add(newEmployee);
+
+        // Add the new employee to the filtered list if it matches the search criteria
+        if (newEmployee.Name.ToLower().Contains(searchKeyword.ToLower()))
+        {
+            FilteredEmployees.Add(newEmployee);
+        }
+
+ 
+        newEmployee = new Employee();
+    }
+
+    public class Employee
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Department { get; set; }
+        public string Position { get; set; }
+    }
+}
+
+<style>
+    .add-employee-page {
+        padding: 20px;
+    }
+
+    .add-employee-form {
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-group button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .form-group button:hover {
+                background-color: #0056b3;
+            }
+
+    .employee-list {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+        .employee-list h2 {
+            margin-top: 30px;
+        }
+
+        .employee-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .employee-list th, .employee-list td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .employee-list th {
+            background-color: #f0f0f0;
+        }
+</style>

@@ -1,0 +1,278 @@
+﻿@page "/Manage_Departments"
+
+<h1>Manage Departments</h1>
+<div class="manage-departments-page">
+
+    <!-- Add Department -->
+    <div class="add-department-form">
+        <h2>Add New Department</h2>
+        <form @onsubmit="AddDepartment">
+            <div class="form-group">
+                <label for="departmentName">Department Name:</label>
+                <input type="text" id="departmentName" @bind="newDepartmentName" />
+            </div>
+            <button type="submit">Add Department</button>
+        </form>
+    </div>
+
+    <!-- Department List -->
+    <div class="department-list">
+        <h2>Department List</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var department in Departments)
+                {
+                    <tr>
+                        <td>@department.Id</td>
+                        <td>
+                            @if (department.Id == editingDepartmentId)
+                            {
+                                <input type="text" @bind="department.Name" />
+                            }
+                            else
+                            {
+                                @department.Name
+                            }
+                        </td>
+                        <td>
+                            @if (department.Id != editingDepartmentId)
+                            {
+                                <button @onclick="() => EditDepartment(department.Id)">Edit</button>
+                                <button @onclick="() => DeleteDepartment(department.Id)">Delete</button>
+                            }
+                            else
+                            {
+                                <button @onclick="SaveDepartmentChanges">Save</button>
+                                <button @onclick="CancelEdit">Cancel</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Assign Employees -->
+    <div class="assign-employees">
+        <h2>Assign Employees</h2>
+        <select @bind="selectedDepartmentId">
+            <option value="">Select Department</option>
+            @foreach (var department in Departments)
+            {
+                <option value="@department.Id">@department.Name</option>
+            }
+        </select>
+        <select @bind="selectedEmployeeId">
+            <option value="">Select Employee</option>
+            @foreach (var employee in Employees)
+            {
+                <option value="@employee.Id">@employee.Name</option>
+            }
+        </select>
+        <button @onclick="AssignEmployeeToDepartment">Assign Employee</button>
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <p>@successMessage</p>
+        }
+    </div>
+</div>
+
+@code {
+    List<Department> Departments = new List<Department>
+    {
+        new Department { Id = 1, Name = "IT", Employees = new List<Employee>() },
+        new Department { Id = 2, Name = "HR", Employees = new List<Employee>() },
+        new Department { Id = 3, Name = "Finance", Employees = new List<Employee>() }
+    };
+
+
+    List<Employee> Employees = new List<Employee>
+    {
+        new Employee { Id = 1, Name = "John Doe" },
+        new Employee { Id = 2, Name = "Jane Smith" },
+        new Employee { Id = 3, Name = "David Johnson" }
+    };
+
+
+    string newDepartmentName;
+    string successMessage = "";
+
+
+    int selectedDepartmentId;
+    int selectedEmployeeId;
+    int editingDepartmentId = -1;
+
+    // add a new department
+    void AddDepartment()
+    {
+        // Generate ID
+        int newId = Departments.Count + 1;
+
+        var newDepartment = new Department { Id = newId, Name = newDepartmentName, Employees = new List<Employee>() };
+        Departments.Add(newDepartment);
+        newDepartmentName = "";
+    }
+    void EditDepartment(int departmentId)
+    {
+        editingDepartmentId = departmentId;
+    }
+
+    void SaveDepartmentChanges()
+    {
+        editingDepartmentId = -1;
+    }
+
+    // Method to cancel editing
+    void CancelEdit()
+    {
+        editingDepartmentId = -1;
+    }
+
+    // Method to delete a department
+    void DeleteDepartment(int departmentId)
+    {
+        var department = Departments.FirstOrDefault(d => d.Id == departmentId);
+        if (department != null)
+        {
+            Departments.Remove(department);
+        }
+    }
+
+    // assign an employee to a department
+    void AssignEmployeeToDepartment()
+    {
+        var department = Departments.FirstOrDefault(d => d.Id == selectedDepartmentId);
+        var employee = Employees.FirstOrDefault(e => e.Id == selectedEmployeeId);
+        if (department != null && employee != null)
+        {
+            department.Employees.Add(employee);
+            successMessage = $"Employee '{employee.Name}' successfully assigned to department '{department.Name}'.";
+            Departments.ForEach(d =>
+            {
+                if (d.Id == selectedDepartmentId)
+                {
+                    d.Employees.RemoveAll(e => e.Id == selectedEmployeeId);
+                }
+            });
+            selectedDepartmentId = 0;
+            selectedEmployeeId = 0;
+            
+            System.Threading.Timer timer = null;
+            timer = new System.Threading.Timer((state) =>
+            {
+                successMessage = "";
+                timer.Dispose();
+                InvokeAsync(StateHasChanged);
+            }, null, 3000, System.Threading.Timeout.Infinite);
+        }
+    }
+
+    public class Department
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public List<Employee> Employees { get; set; }
+    }
+
+    public class Employee
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+}
+
+<style>
+    .manage-departments-page {
+        padding: 20px;
+    }
+
+    .add-department-form {
+        margin-bottom: 30px;
+    }
+
+        .add-department-form h2 {
+            margin-bottom: 10px;
+        }
+
+        .add-department-form .form-group {
+            margin-bottom: 15px;
+        }
+
+            .add-department-form .form-group label {
+                display: block;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .add-department-form .form-group input[type="text"] {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+
+        .add-department-form button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .add-department-form button[type="submit"]:hover {
+                background-color: #0056b3;
+            }
+
+    .department-list table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+    .department-list th, .department-list td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    .department-list th {
+        background-color: #f0f0f0;
+    }
+
+    .assign-employees {
+        margin-bottom: 30px;
+    }
+
+        .assign-employees h2 {
+            margin-bottom: 10px;
+        }
+
+        .assign-employees select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .assign-employees button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .assign-employees button:hover {
+                background-color: #0056b3;
+            }
+</style>

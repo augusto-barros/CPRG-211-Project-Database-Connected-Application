@@ -1,0 +1,207 @@
+﻿@page "/Employee_List"
+@using System.Linq
+
+<div class="employee-list-page">
+    <h1>Employee List</h1>
+
+    <!-- Search bar -->
+    <div class="search-bar">
+        <input type="text" placeholder="Search by name..." @bind="searchKeyword" />
+        <button @onclick="Search">Search</button>
+    </div>
+
+    <!-- Employee table -->
+    <table class="employee-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in FilteredEmployees)
+            {
+                <tr>
+                    <td>@employee.Id</td>
+                    <td>@if (employee.Id != editingEmployeeId)
+                        {
+                            @employee.Name
+                        }
+                        else
+                        {
+                            <input type="text" @bind="employee.NameEdit" />
+                        }</td>
+                    <td>@if (employee.Id != editingEmployeeId)
+                        {
+                            @employee.Email
+                        }
+                        else
+                        {
+                            <input type="text" @bind="employee.EmailEdit" />
+                        }</td>
+                    <td>@if (employee.Id != editingEmployeeId)
+                        {
+                            @employee.Department
+                        }
+                        else
+                        {
+                            <input type="text" @bind="employee.DepartmentEdit" />
+                        }</td>
+                    <td>@if (employee.Id != editingEmployeeId)
+                        {
+                            @employee.Position
+                        }
+                        else
+                        {
+                            <input type="text" @bind="employee.PositionEdit" />
+                        }</td>
+                    <td>
+                        @if (employee.Id != editingEmployeeId)
+                        {
+                            <button @onclick="() => EditEmployee(employee)">Edit</button>
+                            <button @onclick="() => DeleteEmployee(employee.Id)">Delete</button>
+                        }
+                        else
+                        {
+                            <button @onclick="() => SaveEmployee(employee)">Save</button>
+                            <button @onclick="CancelEdit">Cancel</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    List<Employee> Employees = new List<Employee>
+    {
+        new Employee { Id = 1, Name = "John Doe", Email = "john.doe@example.com", Department = "IT", Position = "Software Developer" },
+        new Employee { Id = 2, Name = "Jane Smith", Email = "jane.smith@example.com", Department = "HR", Position = "HR Manager" },
+        new Employee { Id = 3, Name = "David Johnson", Email = "david.johnson@example.com", Department = "Finance", Position = "Accountant" }
+    };
+
+    List<Employee> FilteredEmployees = new List<Employee>();
+
+    string searchKeyword = "";
+    int editingEmployeeId = -1;
+
+    void Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchKeyword))
+        {
+            FilteredEmployees = Employees.ToList();
+        }
+        else
+        {
+            FilteredEmployees = Employees.Where(e => e.Name.ToLower().Contains(searchKeyword.ToLower())).ToList();
+        }
+    }
+
+    void EditEmployee(Employee employee)
+    {
+        editingEmployeeId = employee.Id;
+        // Clone the original values for cancelation
+        employee.NameEdit = employee.Name;
+        employee.EmailEdit = employee.Email;
+        employee.DepartmentEdit = employee.Department;
+        employee.PositionEdit = employee.Position;
+    }
+
+    void SaveEmployee(Employee employee)
+    {
+        // Save edited values and reset editing state
+        employee.Name = employee.NameEdit;
+        employee.Email = employee.EmailEdit;
+        employee.Department = employee.DepartmentEdit;
+        employee.Position = employee.PositionEdit;
+        editingEmployeeId = -1;
+    }
+
+    void CancelEdit()
+    {
+        editingEmployeeId = -1;
+    }
+
+    void DeleteEmployee(int employeeId)
+    {
+        Employees.RemoveAll(e => e.Id == employeeId);
+        FilteredEmployees = Employees.ToList(); // Reapply search filter to update the list correctly
+    }
+
+    public class Employee
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
+        public string Department { get; set; }
+        public string Position { get; set; }
+
+        // Editable properties
+        public string NameEdit { get; set; }
+        public string EmailEdit { get; set; }
+        public string DepartmentEdit { get; set; }
+        public string PositionEdit { get; set; }
+    }
+}
+
+<style>
+    .employee-list-page {
+        padding: 20px;
+    }
+
+    .search-bar {
+        margin-bottom: 20px;
+    }
+
+        .search-bar input {
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        .search-bar button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .search-bar button:hover {
+                background-color: #0056b3;
+            }
+
+    .employee-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .employee-table th, .employee-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .employee-table th {
+            background-color: #f0f0f0;
+        }
+
+        .employee-table td button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+            .employee-table td button:hover {
+                background-color: #0056b3;
+            }
+</style>
